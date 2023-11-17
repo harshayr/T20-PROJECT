@@ -1,7 +1,10 @@
 import pandas as pd
-from logger import logging
 import sys
+from logger import logging
 from exception import CustomException
+from steps.data_transformation import DataTransformation,DataTransformConfig
+from steps.model_train import ModelConfig, ModelTrain
+
 from dataclasses import dataclass
 import os
 from sklearn.model_selection import train_test_split
@@ -28,17 +31,25 @@ class IngestData:
             test_df.to_csv(self.ingest_config.test_path, index = False,header = True)
             logging.info("Data ingestion completed")
 
-        except Exception as e:
-            raise CustomException(e, sys)
-        return (
+            return (
             self.ingest_config.train_path,
             self.ingest_config.test_path
-        )
+            )
+
+        except Exception as e:
+            raise CustomException(e, sys)
+        
     
 
 if __name__ == "__main__":
     obj = IngestData()
-    obj.initiate_data_ingestion()
+    transformation =DataTransformation()
+    modelTrain = ModelTrain()
+    train_path, test_path = obj.initiate_data_ingestion()
+    train_arr, test_arr = transformation.initiate_data_transformation(train_path,test_path)
+    modelTrain.model_train(train_arr,test_arr)
+
+
 
 
 

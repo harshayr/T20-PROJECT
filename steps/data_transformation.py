@@ -3,86 +3,96 @@ import pandas as pd
 import os
 import sys
 
-from sklearn.pipeline import Pipeline
+from dataclasses import dataclass
+
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
 from sklearn.compose import ColumnTransformer
-from sklearn.preprocessing import OneHotEncoder, StandardScaler
-from sklearn.impute import SimpleImputer
-from sklearn.model_selection import train_test_split
 
+from exception import CustomException
+from logger import logging
+from utils import save_file
 
-class SplitData:
-    def __init__(self,data):
-        self.data = data
-    def split_data(self):
-        train_df,test_df = train_test_split(self.data,shuffle=True,test_size=0.3 )
-        return train_df,test_df
+@dataclass
+class DataTransformConfig:
+    preprocess_obj_file = os.path.join("artifacts", "preprocess.pkl")
+
+class DataTransformation:
+    def __init__(self):
+        self.data_transform_config = DataTransformConfig()
+    def get_preprocess_data(self):
+        try:
+            logging.info("Preprocess initiate")
+            num_feature = ['current_score','crr','balls_left'	
+                        ,'wickets_left'	,'last_five' ]
+            cat_feature  = ['batting_team','bowling_team','city']
+
+            num_pipeline = Pipeline(
+                steps = [
+                    ("imputer", SimpleImputer(strategy='median')),
+                    ("scaler", StandardScaler())
+                ]
+            )
+
+            cat_pipeline = Pipeline(
+                steps = [
+                    ("imputer", SimpleImputer(strategy='most_frequent')),
+                    ("encoder", OneHotEncoder(sparse = False))
+                ]
+            )
+
+            preprocess = ColumnTransformer(
+                [
+                    ('num_pipeline', num_pipeline,num_feature),
+                    ('cat_pipeline', cat_pipeline,cat_feature)
+                ]
+            )
+            logging.info("Preprocess complete")
+
+        except Exception as e:
+            raise CustomException(e, sys)
+        
+        return preprocess
     
 
-class TransformData:
-    def __init__(self,data):
-        self.data = data
+    def initiate_data_transformation(self,train_path,test_path):
 
-    def process_data(self,data):
-        split = SplitData(data)
-        train_df,test_df = split.split_data()
-        num_data_train = train_df.select_dtypes(exclude = "object").columns 
-        cat_data_train = train_df.select_dtypes(include = "object").columns 
-        num_data_test = test_df.select_dtypes(exclude = "object").columns 
-        cat_data_test = test_df.select_dtypes(include = "object").columns
+        try:
+            train_df = pd.read_csv(train_path)
+            test_df = pd.read_csv(test_path)
+            logging.info("Data read succesfuly")
 
-        num_pipeline = Pipeline(
-            steps = [
-                ('imputer', SimpleImputer(strategy="median")),
-                ('scaler',StandardScaler())
-            ]
-        )
+            preprocess_obj = self.get_preprocess_data()
+            total_runs = "total_runs"
 
-        num_pipeline_test =Pipeline(
-            steps = [
-                ('imputer', SimpleImputer(strategy="median"))
-            ]
-        )
+            y_train = train_df[total_runs]
+            logging.info("Data split_1 succesfuly")
+            x_train = train_df.drop(columns=[total_runs], axis=1)
+            y_test = test_df[total_runs]
+            logging.info("Data split_2 succesfuly")
+            x_test = test_df.drop(columns=[total_runs], axis=1)
+            
+            logging.info("Preprocessing started")
+            x_train_arr = preprocess_obj.fit_transform(x_train)
+            x_test_arr = preprocess_obj.transform(x_test)
+            logging.info("Preprocessing finish")
 
-        cat_pipeline = Pipeline(
-            steps= [
-                ('imputer',SimpleImputer(strategy="most_frequent")),
-                ('encoder',OneHotEncoder())   
-            ]
-        )
-        preprocess = ColumnTransformer(
-            [
-                ("num_pipeline",num_pipeline,num_data_train),
-                ("cat_pipeline", cat_pipeline,cat_data_train),
-                ("num_pipeline_test",num_pipeline_test,num_data_test),
-                ("num_pipeline_test",cat_pipeline,cat_data_test)
-            ]
-        )
+            train_arr = np.c_[x_train_arr,np.array(y_train)]
+            test_arr = np.c_[x_test_arr, np.array(y_test)]
 
-        return preprocess
+            save_file(self.data_transform_config.preprocess_obj_file,preprocess_obj)
+            logging.info('Transformation completed')
+            logging.info("File save succesfuly")
 
+            return train_arr, test_arr
 
-def transform_df(data):
+        except Exception as e:
+            raise CustomException(e,sys)
 
-    df = SplitData(data)
-    pre = TransformData(data)
-    preprocessor = pre.process_data()
-    train_df,test_df = df.split_data()
-    x_train = train_df[:,:-1]
-    y_train = train_df[:,-1]
-    x_test = test_df[:,:-1]
-    y_test = test_df[:,-1]
-
-    x_train_arr = preprocessor.fit_transform(x_train)
-    x_test_arr = preprocessor.transform(x_test)
-
-    return x_train_arr,y_train,x_test_arr,y_test
-
-
-
-
+        
+    
+        
 
 
 
