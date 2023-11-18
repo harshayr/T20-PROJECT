@@ -2,10 +2,12 @@ import dill
 import pickle
 import os
 from exception import CustomException
+from logger import logging
 import sys
 import pandas as pd
 from sklearn.metrics import r2_score
 from sklearn.model_selection import GridSearchCV
+
 
 
 def save_file(file_path, obj):
@@ -25,7 +27,7 @@ def evaluate_model(x_train,y_train,x_test,y_test, models, param):
         for i in range(len(list(models))):
             model = list(models.values())[i]
             param = list(param.values())[i]
-
+            logging.info("Model hyperparameter tuning started")
             gs = GridSearchCV(model,param,cv=3)
             gs.fit(x_train,y_train)
             model.set_params(**gs.best_params_)
@@ -35,7 +37,18 @@ def evaluate_model(x_train,y_train,x_test,y_test, models, param):
 
             report[list(models.keys())[i]] = test_model_score
             return report
+        logging.info("Model hyperparameter tuning finish")
     except Exception as e:
         raise CustomException(e,sys)
     
+
+def load_obj(file_path):
+    try:
+        logging.info("Model loading started")
+        with open(file_path, "rb")as file_obj:
+            return dill.load(file_obj)
+        logging.info("Model load succesfuly")
+    except Exception as e:
+        raise CustomException(e,sys)
+        
 

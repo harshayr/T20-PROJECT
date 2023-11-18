@@ -1,7 +1,9 @@
-from pipeline.train_pipeline import training_pipeline
+from pipeline.train_pipeline import TrainPipeline
 from exception import CustomException
 import sys
 
 
 if __name__ == "__main__":
-    training_pipeline('/Users/harshalrajput/Desktop/MLOPS_T20/T20-PROJECT/data/t20_cleandata.csv')
+    train_pipeline = TrainPipeline()
+    train_pipeline.training_pipeline('/Users/harshalrajput/Desktop/mlops_T20_project/data/t20_cleandata.csv')
+

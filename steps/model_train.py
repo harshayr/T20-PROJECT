@@ -29,11 +29,12 @@ class ModelTrain:
         self.train_model_file_path = ModelConfig()
     def model_train(self, train_arr,test_arr):
         try:
-            
+            logging.info("Divinding data into x_train,y_train,x_test,y_tes")
             x_train,y_train,x_test,y_test = (train_arr[:,:-1],
                                              train_arr[:,-1],
                                              test_arr[:,:-1],
                                              test_arr[:,-1])
+            logging.info("Data divide succesfuly")
 
             models = {
                 "Decision Tree":DecisionTreeRegressor(),
@@ -76,19 +77,22 @@ class ModelTrain:
                     }
 
                 }
+            logging.info("Model trainig started")
             modelreport:dict = evaluate_model(x_train,y_train,x_test,y_test,models,params)
             best_score_model = max(list(modelreport.values()))
             best_model_name = list(modelreport.keys())[list(modelreport.values()).index(best_score_model)]
             best_model = models[best_model_name]
-
+            logging.info("Model trainig finish")
+            logging.info(f"Model with high accuracy: {best_model_name}")
 
             if best_score_model<0.6:
-                raise CustomException("no best model found")
+                raise CustomException("No best model found")
             
             save_file(
                 file_path=self.train_model_file_path.train_model_file_path,
                 obj=best_model
                 )
+            logging.info ("Model save succesfuly")
             
             pred =best_model.predict(x_test)
             r2 = r2_score(y_test,pred)

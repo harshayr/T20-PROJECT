@@ -67,11 +67,10 @@ class DataTransformation:
             total_runs = "total_runs"
 
             y_train = train_df[total_runs]
-            logging.info("Data split_1 succesfuly")
             x_train = train_df.drop(columns=[total_runs], axis=1)
             y_test = test_df[total_runs]
-            logging.info("Data split_2 succesfuly")
             x_test = test_df.drop(columns=[total_runs], axis=1)
+            logging.info("Data split succesfuly")
             
             logging.info("Preprocessing started")
             x_train_arr = preprocess_obj.fit_transform(x_train)
@@ -82,9 +81,10 @@ class DataTransformation:
             test_arr = np.c_[x_test_arr, np.array(y_test)]
 
             save_file(self.data_transform_config.preprocess_obj_file,preprocess_obj)
-            logging.info('Transformation completed')
-            logging.info("File save succesfuly")
 
+            logging.info("File save succesfuly")
+            logging.info('Transformation completed and returns train_arr, test_arr')
+            
             return train_arr, test_arr
 
         except Exception as e:

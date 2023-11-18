@@ -2,8 +2,7 @@ import pandas as pd
 import sys
 from logger import logging
 from exception import CustomException
-from steps.data_transformation import DataTransformation,DataTransformConfig
-from steps.model_train import ModelConfig, ModelTrain
+from logger import logging
 
 from dataclasses import dataclass
 import os
@@ -19,10 +18,10 @@ class IngestData:
     def __init__(self):
         self.ingest_config = DataIngestConfig()
 
-    def initiate_data_ingestion(self):
+    def initiate_data_ingestion(self,data_path:str):
         logging.info("Data ingestion initiated")
         try:
-            df = pd.read_csv("/Users/harshalrajput/Desktop/MLOPS_T20/T20-PROJECT/data/t20_cleandata.csv")
+            df = pd.read_csv(data_path)
             os.makedirs(os.path.dirname(self.ingest_config.train_path), exist_ok=True)
             df.to_csv(self.ingest_config.raw_path)
 
@@ -40,14 +39,6 @@ class IngestData:
             raise CustomException(e, sys)
         
     
-
-if __name__ == "__main__":
-    obj = IngestData()
-    transformation =DataTransformation()
-    modelTrain = ModelTrain()
-    train_path, test_path = obj.initiate_data_ingestion()
-    train_arr, test_arr = transformation.initiate_data_transformation(train_path,test_path)
-    modelTrain.model_train(train_arr,test_arr)
 
 
 

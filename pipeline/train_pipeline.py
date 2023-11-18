@@ -1,11 +1,29 @@
-from steps.data_ingestion import ingest_df
-from steps.data_transformation import transfrom_df
-from steps.model_train import train_model
-from steps.model_evaluate import evaluate_df
+from exception import CustomException
+from logger import logging
+from steps.model_train import ModelTrain
+from steps.data_ingestion import IngestData
+from steps.data_transformation import DataTransformation
+from dataclasses import dataclass
 
 
-def training_pipeline(data_path:str):
-    df = ingest_df(data_path)
-    transfrom_df(df)
-    train_model(df)
-    evaluate_df(df)
+class TrainPipeline:
+
+    def __init__(self):
+
+        self.ingestdata = IngestData()
+        self.transformdata = DataTransformation()
+        self.modeltrain = ModelTrain()
+
+    def training_pipeline(self,data_path):
+        train_data_path, test_data_path = self.ingestdata.initiate_data_ingestion(data_path = data_path)
+        train_arr, test_arr = self.transformdata.initiate_data_transformation(train_data_path, test_data_path)
+        self.modeltrain.model_train(train_arr, test_arr)
+
+
+
+
+
+
+
+
+
